@@ -64,5 +64,6 @@
     <Compile Include="Components\SortedDictionary.cs" />
     <Compile Include="Components\ValidationHelper.cs" />
     <Compile Include="Components\JsonConverters\LeaderboardHighScoresConverter.cs" />
+    <Compile Include="Components\Reachability.cs" />
   </ItemGroup>
 </Project>

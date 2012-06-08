@@ -11,9 +11,10 @@ namespace Mogade
    public class DriverData : IDriverData
    {
       public const string APIURL = "http://api2.mogade.com/api/";
-      public const string TESTURL = "http://testing2.mogade.com/api/";
+      public const string TESTURL = "api2.mogade.com";
       private string _url;
-      private Func<bool> _networkCheck = () => true;
+      private Func<bool> _networkCheck = () => Reachability.InternetConnectionStatus() != NetworkStatus.NotReachable &&
+                Reachability.IsHostReachable(TESTURL);
 
       public string Url
       {
@@ -29,7 +30,8 @@ namespace Mogade
       public void Reset()
       {
          _url = null;
-         _networkCheck = () => true;
+         _networkCheck = () => Reachability.InternetConnectionStatus() != NetworkStatus.NotReachable &&
+                Reachability.IsHostReachable(TESTURL);
       }
    }
 }

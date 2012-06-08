@@ -20,6 +20,14 @@ namespace Mogade
       public Communicator(IRequestContext context)
       {
          _context = context;
+
+        // HACK to force jit GetRequestStream<int>
+        try {
+            GetResponseStream<int>(null);
+        }
+        catch {
+            //Do nothing
+        }
       }
 
       public void SendPayload<T>(string method, string endPoint, IDictionary<string, object> partialPayload, Action<Response<T>> callback)
