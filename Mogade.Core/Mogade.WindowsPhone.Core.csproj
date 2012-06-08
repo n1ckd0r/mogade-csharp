@@ -13,7 +13,7 @@
     <AssemblyName>Mogade.WindowsPhone.Core</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
-    <TargetFrameworkProfile>WindowsPhone</TargetFrameworkProfile>
+    <TargetFrameworkProfile>WindowsPhone71</TargetFrameworkProfile>
     <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
     <SilverlightApplication>false</SilverlightApplication>
     <ValidateXaml>true</ValidateXaml>
@@ -41,6 +41,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Phone" />
     <Reference Include="Newtonsoft.Json.WindowsPhone">
       <HintPath>..\References\Newtonsoft.Json.WindowsPhone.dll</HintPath>
     </Reference>
@@ -54,6 +55,7 @@
     <Compile Include="Components\IDriverConfiguration.cs" />
     <Compile Include="Components\IDriverData.cs" />
     <Compile Include="Components\JsonConverters\LeaderboardHighScoresConverter.cs" />
+    <Compile Include="Components\Reachability.cs" />
     <Compile Include="Components\Response.cs" />
     <Compile Include="Components\SortedDictionary.cs" />
     <Compile Include="Components\Communicator.cs" />

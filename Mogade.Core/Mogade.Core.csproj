@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="Components\IDriverData.cs" />
     <Compile Include="Components\JsonConverters\LeaderboardHighScoresConverter.cs" />
+    <Compile Include="Components\Reachability.cs" />
     <Compile Include="IDriver.cs" />
     <Compile Include="Components\Communicator.cs" />
     <Compile Include="Components\IRequestContext.cs" />
