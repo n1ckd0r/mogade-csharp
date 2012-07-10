@@ -32,49 +32,62 @@ namespace Mogade
 
       public void SendPayload<T>(string method, string endPoint, IDictionary<string, object> partialPayload, Action<Response<T>> callback)
       {
-         if (!DriverConfiguration.Data.NetworkCheck())
-         {
+        try {
+             if (!DriverConfiguration.Data.NetworkCheck())
+             {
+                if (callback != null) { callback(Response<T>.CreateError(new ErrorMessage {Message = "Network is not available"})); }
+                return;
+             }
+             var isGet = method == Get;
+
+             var url = string.Concat(DriverConfiguration.Data.Url, _context.ApiVersion, "/", endPoint);
+             var payload = FinalizePayload(partialPayload, isGet);
+             if (isGet) { url += '?' + payload; }
+             var request = (HttpWebRequest)WebRequest.Create(url);
+             request.Method = method;
+             request.UserAgent = "mogade-csharp2";
+    #if !WINDOWS_PHONE
+             request.Timeout = 10000;
+             request.ReadWriteTimeout = 10000;
+             request.KeepAlive = false;
+    #endif   
+         
+             if (isGet)
+             {
+                request.BeginGetResponse(GetResponseStream<T>, new RequestState<T> {Request = request, Callback = callback});
+             }
+             else 
+             {
+                request.ContentType = "application/x-www-form-urlencoded";
+                var data = Encoding.UTF8.GetBytes(payload);
+    #if !WINDOWS_PHONE
+                request.ContentLength = data.Length;
+    #endif
+                request.BeginGetRequestStream(GetRequestStream<T>, new RequestState<T> { Request = request, Payload = data, Callback = callback });
+             }
+        }
+        catch {
             if (callback != null) { callback(Response<T>.CreateError(new ErrorMessage {Message = "Network is not available"})); }
             return;
-         }
-         var isGet = method == Get;
-
-         var url = string.Concat(DriverConfiguration.Data.Url, _context.ApiVersion, "/", endPoint);
-         var payload = FinalizePayload(partialPayload, isGet);
-         if (isGet) { url += '?' + payload; }
-         var request = (HttpWebRequest)WebRequest.Create(url);
-         request.Method = method;
-         request.UserAgent = "mogade-csharp2";
-#if !WINDOWS_PHONE
-         request.Timeout = 10000;
-         request.ReadWriteTimeout = 10000;
-         request.KeepAlive = false;
-#endif   
-         if (isGet)
-         {
-            request.BeginGetResponse(GetResponseStream<T>, new RequestState<T> {Request = request, Callback = callback});
-         }
-         else 
-         {
-            request.ContentType = "application/x-www-form-urlencoded";
-            var data = Encoding.UTF8.GetBytes(payload);
-#if !WINDOWS_PHONE
-            request.ContentLength = data.Length;
-#endif
-            request.BeginGetRequestStream(GetRequestStream<T>, new RequestState<T> { Request = request, Payload = data, Callback = callback });
-         }
+        }
       }
 
       private static void GetRequestStream<T>(IAsyncResult result)
       {
-         var state = (RequestState<T>)result.AsyncState;
-         using (var requestStream = state.Request.EndGetRequestStream(result))
+        var state = (RequestState<T>)result.AsyncState;
+        try {     
+             using (var requestStream = state.Request.EndGetRequestStream(result))
+             {
+                requestStream.Write(state.Payload, 0, state.Payload.Length);
+                requestStream.Flush();
+                requestStream.Close();
+             }
+             state.Request.BeginGetResponse(GetResponseStream<T>, state);
+        }
+        catch (Exception ex)
          {
-            requestStream.Write(state.Payload, 0, state.Payload.Length);
-            requestStream.Flush();
-            requestStream.Close();
+            if (state.Callback != null) { state.Callback(Response<T>.CreateError(HandleException(ex))); }
          }
-         state.Request.BeginGetResponse(GetResponseStream<T>, state);
       }
 
       private static void GetResponseStream<T>(IAsyncResult result)
@@ -194,9 +207,13 @@ namespace Mogade
 
       private static ErrorMessage HandleException(Exception exception)
       {
-         if (exception is WebException)
+         //Forcing the null path, I really don't care about the error, and deserializing the json
+         //is eating memory :(
+         /*if (exception is WebException)
          {
+            
             var response = ((WebException) exception).Response;
+
             if (response == null)
             {
                return new ErrorMessage {Message = "Null response (wakeup from rehydrating (multitasking)?)", InnerException = exception};
@@ -212,7 +229,7 @@ namespace Mogade
             {
                return new ErrorMessage {Message = body, InnerException = exception};
             }
-         }
+         }*/
          return new ErrorMessage {Message = "Unknown Error", InnerException = exception};
       }
 

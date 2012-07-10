@@ -46,6 +46,33 @@ public static class Reachability {
 
      return isReachable && noConnectionRequired;
  }
+
+ // 
+ // Raised every time there is an interesting reachable event, 
+ // we do not even pass the info as to what changed, and 
+ // we lump all three status we probe into one
+ //
+ public static event EventHandler ReachabilityChanged;
+
+ static void OnChange (NetworkReachabilityFlags flags)
+ {
+     var h = ReachabilityChanged;
+     if (h != null)
+         h (null, EventArgs.Empty);
+ }
+
+ static NetworkReachability defaultRouteReachability;
+ static bool IsNetworkAvaialable (out NetworkReachabilityFlags flags)
+ {
+     if (defaultRouteReachability == null){
+         defaultRouteReachability = new NetworkReachability (new IPAddress (0));
+         defaultRouteReachability.SetCallback (OnChange);
+         defaultRouteReachability.Schedule (CFRunLoop.Current, CFRunLoop.ModeDefault);
+     }
+     if (defaultRouteReachability.TryGetFlags (out flags))
+         return false;
+     return IsReachableWithoutRequiringConnection (flags);
+ }  
 #endif
 
  // Is the host reachable with the current network configuration
